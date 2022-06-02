@@ -2,6 +2,7 @@ import os
 
 import pandas as pd
 import seaborn as sns
+import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler, QuantileTransformer
@@ -49,11 +50,40 @@ def prepare_zillow_data(df):
     df = df.dropna()
     #apply the boolean conditions
     #exclude very small houses
-    ddf = df[(df.bedroomcnt > 0) & (df.bathroomcnt > 0) & (df.calculatedfinishedsquarefeet > 149)]
+    df = df[(df.bedroomcnt > 0) & (df.bathroomcnt > 0) & (df.calculatedfinishedsquarefeet > 149)]
     #exclude very large houses
     df = df[(df.bedroomcnt < 7) & (df.bathroomcnt < 7)]
+    #exclude large square feet houses
+    df = df[df.calculatedfinishedsquarefeet <= 6000]
     #exclude very expensive houses
     df = df[df.taxvaluedollarcnt <= 2000000]
+    #cast datatypes appropriately
+    df['bedroomcnt'] = df['bedroomcnt'].astype(np.uint8)
+    df['calculatedfinishedsquarefeet'] = df['calculatedfinishedsquarefeet'].astype(np.uint)
+    df['yearbuilt'] = df['yearbuilt'].astype(np.uint)
+    df['taxvaluedollarcnt'] = df['taxvaluedollarcnt'].astype(np.uint)
+    #drop unnecessary columns
+    df = df.drop(columns=['propertylandusetypeid', 'parcelid', 'propertylandusedesc'])
+    #map the fips code
+    df = clearing_fips(df)
+    return df
+
+def clearing_fips(df):
+    '''This function takes in a DataFrame of unprepared Zillow information and generates a new
+    'county' column, with the county name based on the FIPS code. Drops the 'fips' column and returns
+    the new DataFrame.
+    '''
+    # create a list of our conditions
+    fips = [
+        (df['fips'] == 6037.0),
+        (df['fips'] == 6059.0),
+        (df['fips'] == 6111.0)
+        ]
+    # create a list of the values we want to assign for each condition
+    counties = ['Los Angeles', 'Orange', 'Ventura']
+    # create a new column and use np.select to assign values to it using our lists as arguments
+    df['county'] = np.select(fips, counties)
+    df = df.drop(columns = 'fips')
     return df
 
 def wrangle_zillow_data():
