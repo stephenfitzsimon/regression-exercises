@@ -26,7 +26,6 @@ def regression_errors(y, yhat):
         'RMSE': metrics.mean_squared_error(y, yhat)**(0.5),
         'R2':metrics.explained_variance_score(y, yhat)
     }
-
     return reg_errors
 
 def baseline_mean_errors(y):

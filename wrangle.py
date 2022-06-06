@@ -63,7 +63,7 @@ def prepare_zillow_data(df):
     df['yearbuilt'] = df['yearbuilt'].astype(np.uint)
     df['taxvaluedollarcnt'] = df['taxvaluedollarcnt'].astype(np.uint)
     #drop unnecessary columns
-    df = df.drop(columns=['propertylandusetypeid', 'parcelid', 'propertylandusedesc'])
+    df = df.drop(columns=['propertylandusetypeid', 'parcelid', 'propertylandusedesc', 'taxamount'])
     #map the fips code
     df = clearing_fips(df)
     return df
@@ -102,10 +102,10 @@ def split_zillow_data(df):
     '''
     train, test = train_test_split(df, train_size = 0.8, random_state=RAND_SEED)
     train, validate = train_test_split(train, train_size = 0.7, random_state=RAND_SEED)
-    return train, test, validate
+    return train, validate, test
 
 def zillow_scale(df,
-                columns = ['calculatedfinishedsquarefeet', 'taxvaluedollarcnt', 'taxamount'],
+                columns = ['calculatedfinishedsquarefeet', 'taxvaluedollarcnt'],
                 scaler_in=RobustScaler(),
                 return_scalers=False):
     '''
@@ -140,9 +140,9 @@ def zillow_scale(df,
         }
         scalers.append(scaler)
         #store the transformed data
-        df_scaled[f"{column}_scaled"] = scaled_col
+        df[f"{column}_scaled"] = scaled_col
     #determine the correct varibales to return
     if return_scalers:
-        return df_scaled.drop(columns = columns), scalers
+        return df, scalers
     else:
-        return df_scaled.drop(columns = columns)
+        return df
